@@ -19,7 +19,7 @@ A multi-page Streamlit application designed to assist with personal finance and 
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/financial-planner.git
+git clone https://github.com/Manomaysubban-Narasimha/Financial-Planner.git
 cd financial-planner
 ```
 
