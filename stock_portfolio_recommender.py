@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 
 def render_ETF(etf):
-    st.write(f"<b>Recommendation:</b> Invest in the {etf} ETF", unsafe_allow_html=True)
+    st.write(f"<b>Recommendation:</b> Invest in the <b>{etf}</b> ETF", unsafe_allow_html=True)
             
     timeframes = st.selectbox(
         "Select Timeframe",
