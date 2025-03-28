@@ -9,6 +9,7 @@ click==8.1.8
 contourpy==1.3.1
 cycler==0.12.1
 docutils==0.21.2
+exchange_calendars==4.10
 filelock==3.18.0
 fonttools==4.56.0
 frozendict==2.4.6
@@ -21,6 +22,7 @@ Jinja2==3.1.6
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 kiwisolver==1.4.8
+korean-lunar-calendar==0.3.1
 lxml==5.3.1
 MarkupSafe==3.0.2
 matplotlib==3.10.1
@@ -29,9 +31,11 @@ multitasking==0.0.11
 narwhals==1.32.0
 networkx==3.4.2
 numpy==2.2.4
+numpy-financial==1.0.0
 packaging==24.2
 pandas==2.2.3
 pandas-datareader==0.10.0
+pandas_market_calendars==4.6.1
 peewee==3.17.9
 pillow==11.1.0
 platformdirs==4.3.7
@@ -39,6 +43,7 @@ plotly==6.0.1
 protobuf==5.29.4
 pyarrow==19.0.1
 pydeck==0.9.1
+pyluach==2.2.0
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 pytz==2025.2
@@ -58,6 +63,7 @@ sympy==1.13.3
 tenacity==9.0.0
 tokenizers==0.21.1
 toml==0.10.2
+toolz==1.0.0
 torch==2.2.2
 tornado==6.4.2
 tqdm==4.67.1
