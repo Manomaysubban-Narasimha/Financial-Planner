@@ -21,18 +21,22 @@ A multi-page Streamlit application designed to assist with personal finance and 
 ```bash
 git clone https://github.com/<your-username>/financial-planner.git
 cd financial-planner
+```
 
 ### 2. Create and Activate a Virtual Environment
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
 
 ### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
+```
 
 ### 4. Run the App
 ```bash
 streamlit run app.py
+```
 
 Open your browser to http://localhost:8501 to access the app.
