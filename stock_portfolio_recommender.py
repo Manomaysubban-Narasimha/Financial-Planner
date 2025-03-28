@@ -78,7 +78,7 @@ def main():
         "Select Your Risk Tolerance",
         min_value=1,
         max_value=5,
-        value=3,
+        value=1,
         help="1 = Very Low Risk, 2 = Low Risk, 3 = Medium Risk, 4 = High Risk, 5 = Very High Risk"
     )
     
