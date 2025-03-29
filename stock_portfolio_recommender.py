@@ -47,7 +47,7 @@ def render_ETF(etf):
     
     historical_data = etf_data.history(start=start_date, end=end_date, interval=interval)
     
-    st.dataframe(historical_data)
+    # st.dataframe(historical_data)
     
     
     if chart_type == "Line":
