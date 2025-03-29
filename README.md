@@ -29,12 +29,29 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 3. Obtain API Keys
+- Visit newsapi.org and obtain NewsAPI Key
+- Visit https://site.financialmodelingprep.com/ and obtain FMP API key
+
+### 4. Create a folder for streamlit in the project's root directory and create secrets.toml file to store the API keys
+```bash
+mkdir .streamlit
+cd .streamlit
+touch secrets.toml
+```
+
+### 5. Fill the secrets.toml file with 
+```bash 
+news_api_key = "<Your NewsAPI Key>"
+fmp_api_key = "<Your FMP API Key>"
+``` 
+
+### 6. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the App
+### 7. Run the App
 ```bash
 streamlit run app.py
 ```
