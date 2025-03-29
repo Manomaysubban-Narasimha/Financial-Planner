@@ -67,7 +67,8 @@ def main():
     retirement_calculator = RetirementCalculator()
     retirement_calculator.retrieve_user_info()
     retirement_calculator.calculate()
-    retirement_calculator.display_results()
+    if st.button("Calculate"):
+        retirement_calculator.display_results()
 
 
 if __name__ == "__main__":
