@@ -88,11 +88,11 @@ def main():
         case 2:
             render_ETF("QQQM")
         case 3:
-            st.write("In progress: Perform fundamental analysis and sentiment analysis on Large Cap Companies, then recommend 5-10 top picks")
+            st.write("**In progress**: Perform fundamental analysis and sentiment analysis on Large Cap Companies, then recommend 5-10 top picks")
         case 4:
-            st.write("Perform fundamental analysis and sentiment analysis on Mid Cap Companies, then recommend 5-10 top picks")
+            st.write("**In progress**: Perform fundamental analysis and sentiment analysis on Mid Cap Companies, then recommend 5-10 top picks")
         case 5:
-            st.write("Perform fundamental analysis and sentiment analysis on Small Cap Companies, then recommend 5-10 top picks")
+            st.write("**In progress**: Perform fundamental analysis and sentiment analysis on Small Cap Companies, then recommend 5-10 top picks")
 
 
 if __name__ == "__main__":
