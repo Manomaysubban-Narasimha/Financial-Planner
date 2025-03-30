@@ -1,12 +1,14 @@
-import streamlit as st
 import requests
 from utils.shared_functions import is_market_open, get_previous_market_day
 from datetime import datetime, timedelta
 from transformers import BertTokenizer, BertForSequenceClassification
 import torch
 from statistics import mean
+import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+
 
 
 MAX_FREE_TIER_MAXIMIZE_FETCH = 100
@@ -279,6 +281,64 @@ def format_value(value):
         return f'{value:.2f}'
 
 
+def get_average_recommendation_rating(stock_symbol):
+    fmp_api_key = st.secrets["fmp_api_key"]
+    url = f"https://financialmodelingprep.com/api/v3/rating/{stock_symbol}?apikey={fmp_api_key}"
+    response = requests.get(url)
+    if response.status_code == SUCCESSFUL_REQUEST:
+        data = response.json()  # Parse the JSON response
+        all_rating_scores = list()
+        all_rating_scores.append(data[0]["ratingScore"])
+        all_rating_scores.append(data[0]["ratingDetailsDCFScore"])
+        all_rating_scores.append(data[0]["ratingDetailsROEScore"])
+        all_rating_scores.append(data[0]["ratingDetailsROAScore"])
+        all_rating_scores.append(data[0]["ratingDetailsDEScore"])
+        all_rating_scores.append(data[0]["ratingDetailsPEScore"])
+        all_rating_scores.append(data[0]["ratingDetailsPBScore"])
+        
+        return round(mean(all_rating_scores), 2)
+    else:
+        print(f"Error unable to receive response")
+
+
+def display_recommendation(stock_symbol):
+    st.title("Recommendation")
+    
+    fig, ax = plt.subplots(figsize=(10, 2))
+    # Create the number line (1 to 5)
+    ax.plot([1, 5], [0, 0], 'k-', lw=2)  # Main line
+    ax.plot([1, 1], [-0.1, 0.1], 'k-')  # Left end
+    ax.plot([5, 5], [-0.1, 0.1], 'k-')  # Right end
+
+    # Add tick marks and labels
+    ratings = {
+        1: "Strong Sell",
+        2: "Sell",
+        3: "Neutral",
+        4: "Buy",
+        5: "Strong Buy"
+    }
+
+    for rating, label in ratings.items():
+        ax.plot([rating, rating], [-0.05, 0.05], 'k-')  # Tick marks
+        ax.text(rating, -0.15, label, ha='center', va='top')
+
+    average_recommendation_rating: float = get_average_recommendation_rating(stock_symbol)
+    average_recommendation_rating_str = str(average_recommendation_rating)
+    
+    ax.plot(average_recommendation_rating, 0, 'ro', markersize=10)  # Red dot for 2.7
+    ax.text(average_recommendation_rating, 0.1, average_recommendation_rating_str, ha='center', va='bottom')
+
+    # Customize the plot
+    ax.set_xlim(0.8, 5.2)
+    ax.set_ylim(-0.3, 0.3)
+    ax.axis('off')  # Hide axes
+
+    st.pyplot(fig)
+
+    st.write(f"The red dot represents the current rating value of {average_recommendation_rating} on the scale from Strong Sell (1) to Strong Buy (5).")
+
+
 def main():
     st.title("Stock Analyzer")
     st.write("Enter a stock symbol to analyze sentiment based on recent financial news articles.")
@@ -299,6 +359,8 @@ def main():
         st.header("Financials")
         financials = get_company_financials(stock_symbol)
         st.markdown(financials)
+        
+        display_recommendation(stock_symbol)
         
         st.header("Sentiment Analysis") 
         with st.spinner("Fetching and analyzing news..."):
