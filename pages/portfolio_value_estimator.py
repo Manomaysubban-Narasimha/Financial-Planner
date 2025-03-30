@@ -4,23 +4,13 @@ import pandas as pd
 import pandas_market_calendars as mcal
 import numpy_financial as npf
 import datetime
+from utils.shared_functions import is_market_open, get_previous_market_day
 from dateutil.relativedelta import relativedelta
 
 # Constants
 NUM_OF_MARKET_DAYS_IN_A_YEAR = 252
 NUM_OF_MONTHS_IN_A_YEAR = 12
 
-# Function to check if a date is a market day
-def is_market_open(date):
-    nyse = mcal.get_calendar('NYSE')
-    schedule = nyse.schedule(start_date=date, end_date=date)
-    return not schedule.empty
-
-# Function to get the previous market day
-def get_previous_market_day(date):
-    while not is_market_open(date):
-        date = date - datetime.timedelta(days=1)
-    return date
 
 # Function to calculate annualized IRR
 def calculate_annualized_irr(daily_investment_amount, closing_prices, portfolio_value):

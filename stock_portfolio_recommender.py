@@ -9,7 +9,8 @@ def render_ETF(etf):
             
     timeframes = st.selectbox(
         "Select Timeframe",
-        ["1D", "1W", "1M", "6M", "YTD", "1Y", "5Y", "MAX"]
+        ["1D", "1W", "1M", "6M", "YTD", "1Y", "5Y", "MAX"],
+        index=5  # Index 5 corresponds to "1Y"
     )
     
     chart_type = st.radio(

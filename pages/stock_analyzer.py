@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from utils.shared_functions import is_market_open, get_previous_market_day
 from datetime import datetime, timedelta
 from transformers import BertTokenizer, BertForSequenceClassification
 import torch
@@ -7,11 +8,13 @@ from statistics import mean
 import yfinance as yf
 import plotly.graph_objects as go
 
+
 MAX_FREE_TIER_MAXIMIZE_FETCH = 100
 MILLION = 1_000_000
 BILLION = 1_000_000_000
 TRILLION = 1_000_000_000_000
 THOUSAND = 1_000
+SUCCESSFUL_REQUEST = 200
 
 # Load FinBERT model and tokenizer (cached to avoid reloading)
 @st.cache_resource
@@ -125,6 +128,10 @@ def analyze_stock_sentiment(stock_symbol):
 def plot_stock_price(symbol, timeframe):
     # Define timeframe parameters
     end_date = datetime.now()
+    
+    if not is_market_open(end_date):
+        end_date = get_previous_market_day(end_date)
+        
     if timeframe == '1d':
         start_date = end_date - timedelta(days=1)
         interval = '5m'
@@ -182,6 +189,16 @@ def plot_stock_price(symbol, timeframe):
     return fig
 
 
+def get_intrinsic_value(symbol):
+    fmp_api_key = st.secrets["fmp_api_key"]
+    # using DCF method for calculating intrinsic value
+    url = (f"https://financialmodelingprep.com/api/v3/discounted-cash-flow/{symbol}?apikey={fmp_api_key}")
+    response = requests.get(url)
+    if response.status_code == SUCCESSFUL_REQUEST:
+        data = response.json()  # Parse the JSON response
+        return data[0]["dcf"], data[0]['Stock Price']
+
+
 def get_company_financials(symbol):
     stock = yf.Ticker(symbol)
     info = stock.info
@@ -199,6 +216,17 @@ def get_company_financials(symbol):
     cash = format_value(cash)
     market_cap = format_value(market_cap)
     
+    intrinsic_value, current_price = get_intrinsic_value(symbol)
+    
+    valuation = ""
+    
+    if current_price < intrinsic_value:
+        valuation = "Undervalued"
+    elif current_price > intrinsic_value:
+        valuation = "Overvalued"
+    else:
+        valuation = "Fairly Valued"
+    
     # Format the output
     financials = f"""
     **Company Financials for {symbol}:**
@@ -208,6 +236,9 @@ def get_company_financials(symbol):
     - **Market Cap:** ${market_cap}
     - **Trailing PE Ratio:** {trailing_pe_ratio:.2f}
     - **Forward PE Ratio:** {forward_pe_ratio:.2f}
+    - **Intrinsic Value (DCF):** ${intrinsic_value:.2f}
+    - **Current price:** ${current_price:.2f}
+    - **Valuation:** {valuation}
     """
     
     return financials
@@ -257,7 +288,7 @@ def main():
     if stock_symbol:
         # Add timeframe selector
         timeframes = ['1d', '1w', '1m', '3m', '6m', 'ytd', '1y', '3y', '5y', 'max']
-        selected_timeframe = st.selectbox('Select Timeframe', timeframes)
+        selected_timeframe = st.selectbox('Select Timeframe', timeframes, index=timeframes.index('1y'))
         
         # Plot stock price
         fig = plot_stock_price(stock_symbol, selected_timeframe)
