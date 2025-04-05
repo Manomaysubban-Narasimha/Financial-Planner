@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 ### 7. Run the App
 ```bash
-streamlit run app.py
+streamlit run stock_portfolio_recommender.py
 ```
 
 Open your browser to http://localhost:8501 to access the app.
