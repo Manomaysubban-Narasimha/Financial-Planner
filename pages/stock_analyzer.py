@@ -289,12 +289,12 @@ def get_average_recommendation_rating(stock_symbol):
         data = response.json()  # Parse the JSON response
         all_rating_scores = list()
         all_rating_scores.append(data[0]["ratingScore"])
-        all_rating_scores.append(data[0]["ratingDetailsDCFScore"])
-        all_rating_scores.append(data[0]["ratingDetailsROEScore"])
-        all_rating_scores.append(data[0]["ratingDetailsROAScore"])
-        all_rating_scores.append(data[0]["ratingDetailsDEScore"])
-        all_rating_scores.append(data[0]["ratingDetailsPEScore"])
-        all_rating_scores.append(data[0]["ratingDetailsPBScore"])
+        all_rating_scores.append(data[0]["ratingDetailsDCFScore"])  # Discounted Cash Flow
+        all_rating_scores.append(data[0]["ratingDetailsROEScore"])  # Return on Equity
+        all_rating_scores.append(data[0]["ratingDetailsROAScore"])  # Return on Assets 
+        all_rating_scores.append(data[0]["ratingDetailsDEScore"])  # Debt to Equity 
+        all_rating_scores.append(data[0]["ratingDetailsPEScore"])  # Price to Earnings
+        all_rating_scores.append(data[0]["ratingDetailsPBScore"])  # Price to Book
         
         return round(mean(all_rating_scores), 2)
     else:
