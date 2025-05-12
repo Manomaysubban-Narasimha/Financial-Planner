@@ -183,9 +183,9 @@ def main():
     risk_level = st.slider(
         "Select Your Risk Tolerance",
         min_value=1,
-        max_value=5,
+        max_value=3,
         value=1,
-        help="1 = Very Low Risk, 2 = Low Risk, 3 = Medium Risk, 4 = High Risk, 5 = Very High Risk"
+        help="1 = Low, 2 = Medium, 3 = High"
     )
     
     match risk_level:
@@ -195,10 +195,6 @@ def main():
             render_ETF("QQQM")
         case 3:
             recommend_from_nasdaq100()
-        case 4:
-            st.write("**In progress**: Perform fundamental analysis and sentiment analysis on Mid Cap Companies, then recommend 5-10 top picks")
-        case 5:
-            st.write("**In progress**: Perform fundamental analysis and sentiment analysis on Small Cap Companies, then recommend 5-10 top picks")
 
 
 if __name__ == "__main__":
