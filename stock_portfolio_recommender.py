@@ -145,7 +145,7 @@ def recommend_from_nasdaq100():
             "Symbol": symbol,
             "Company Name": symbol_to_name[symbol],
             "Rating": round(rating, 5),
-            "Net Income": f"${net_incomes[symbol]:,.2f}"
+            # "Net Income": f"${net_incomes[symbol]:,.2f}"
         })
     
     df = pd.DataFrame(recommendations_data)
