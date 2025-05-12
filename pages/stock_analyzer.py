@@ -5,7 +5,6 @@ from transformers import BertTokenizer, BertForSequenceClassification
 import torch
 from statistics import mean
 import streamlit as st
-import yfinance as yf
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
@@ -136,49 +135,60 @@ def plot_stock_price(symbol, timeframe):
         
     if timeframe == '1d':
         start_date = end_date - timedelta(days=1)
-        interval = '5m'
+        interval = '1min'
     elif timeframe == '1w':
         start_date = end_date - timedelta(weeks=1)
-        interval = '15m'
+        interval = '1hour'
     elif timeframe == '1m':
         start_date = end_date - timedelta(days=30)
-        interval = '1h'
+        interval = '1day'
     elif timeframe == '3m':
         start_date = end_date - timedelta(days=90)
-        interval = '1d'
+        interval = '1day'
     elif timeframe == '6m':
         start_date = end_date - timedelta(days=180)
-        interval = '1d'
+        interval = '1day'
     elif timeframe == 'ytd':
         start_date = datetime(end_date.year, 1, 1)
-        interval = '1d'
+        interval = '1day'
     elif timeframe == '1y':
         start_date = end_date - timedelta(days=365)
-        interval = '1d'
+        interval = '1day'
     elif timeframe == '3y':
         start_date = end_date - timedelta(days=1095)
-        interval = '1d'
+        interval = '1day'
     elif timeframe == '5y':
         start_date = end_date - timedelta(days=1825)
-        interval = '1d'
+        interval = '1day'
     else:  # max
         start_date = None
-        interval = '1d'
+        interval = '1day'
 
-    # Fetch stock data
-    stock = yf.Ticker(symbol)
-    df = stock.history(start=start_date, end=end_date, interval=interval)
+    # Fetch stock data using FMP API
+    fmp_api_key = st.secrets["fmp_api_key"]
+    if start_date:
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/{interval}/{symbol}?from={start_date.strftime('%Y-%m-%d')}&to={end_date.strftime('%Y-%m-%d')}&apikey={fmp_api_key}"
+    else:
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/{interval}/{symbol}?apikey={fmp_api_key}"
     
-    if df.empty:
+    response = requests.get(url)
+    if response.status_code != SUCCESSFUL_REQUEST:
+        st.error(f"No data available for {symbol}")
+        return
+
+    data = response.json()
+    if not data:
         st.error(f"No data available for {symbol}")
         return
 
     # Create the candlestick chart
-    fig = go.Figure(data=[go.Candlestick(x=df.index,
-                open=df['Open'],
-                high=df['High'],
-                low=df['Low'],
-                close=df['Close'])])
+    fig = go.Figure(data=[go.Candlestick(
+        x=[entry['date'] for entry in data],
+        open=[entry['open'] for entry in data],
+        high=[entry['high'] for entry in data],
+        low=[entry['low'] for entry in data],
+        close=[entry['close'] for entry in data]
+    )])
 
     # Update layout
     fig.update_layout(
@@ -202,20 +212,31 @@ def get_intrinsic_value(symbol):
 
 
 def get_company_financials(symbol):
-    stock = yf.Ticker(symbol)
-    info = stock.info
+    fmp_api_key = st.secrets["fmp_api_key"]
+    
+    # Get company profile
+    profile_url = f"https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={fmp_api_key}"
+    profile_response = requests.get(profile_url)
+    
+    # Get income statement
+    income_url = f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?limit=1&apikey={fmp_api_key}"
+    income_response = requests.get(income_url)
+    
+    if profile_response.status_code != SUCCESSFUL_REQUEST or income_response.status_code != SUCCESSFUL_REQUEST:
+        st.error("Failed to fetch company data")
+        return
+    
+    profile_data = profile_response.json()[0]
+    income_data = income_response.json()[0]
     
     # Extract relevant financial data
-    revenue = info.get('totalRevenue', 'N/A')
-    net_profit = info.get('netIncomeToCommon', 'N/A')
-    cash = info.get('totalCash', 'N/A')
-    market_cap = info.get('marketCap', 'N/A')
-    trailing_pe_ratio = info.get('trailingPE', 'N/A')
-    forward_pe_ratio = info.get('forwardPE', 'N/A')
+    revenue = income_data.get('revenue', 'N/A')
+    net_profit = income_data.get('netIncome', 'N/A')
+    market_cap = profile_data.get('mktCap', 'N/A')
+    pe_ratio = profile_data.get('pe', 'N/A')
     
     revenue = format_value(revenue)
     net_profit = format_value(net_profit)
-    cash = format_value(cash)
     market_cap = format_value(market_cap)
     
     intrinsic_value, current_price = get_intrinsic_value(symbol)
@@ -232,12 +253,10 @@ def get_company_financials(symbol):
     # Format the output
     financials = f"""
     **Company Financials for {symbol}:**
-    - **Total Revenue (Trailing 12 months ending December 31, 2024):** ${revenue}
-    - **Net Profit/Bottom Line (Trailing 12 months ending December 31, 2024):** ${net_profit}
-    - **Total Cash (quarter ending December 31, 2024):** ${cash}
+    - **Total Revenue (Trailing 12 months):** ${revenue}
+    - **Net Profit/Bottom Line (Trailing 12 months):** ${net_profit}
     - **Market Cap:** ${market_cap}
-    - **Trailing PE Ratio:** {trailing_pe_ratio:.2f}
-    - **Forward PE Ratio:** {forward_pe_ratio:.2f}
+    - **PE Ratio:** {f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else 'N/A'}
     - **Intrinsic Value (DCF):** ${intrinsic_value:.2f}
     - **Current price:** ${current_price:.2f}
     - **Valuation:** {valuation}

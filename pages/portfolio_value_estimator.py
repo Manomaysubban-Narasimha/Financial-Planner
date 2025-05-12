@@ -1,5 +1,5 @@
 import streamlit as st
-import yfinance as yf
+import requests
 import pandas as pd
 import pandas_market_calendars as mcal
 import numpy_financial as npf
@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 # Constants
 NUM_OF_MARKET_DAYS_IN_A_YEAR = 252
 NUM_OF_MONTHS_IN_A_YEAR = 12
+SUCCESSFUL_REQUEST = 200
 
 
 # Function to calculate annualized IRR
@@ -28,10 +29,18 @@ def main():
 
     # Only proceed if ticker_symbol is provided
     if ticker_symbol:
-        stock_info = yf.Ticker(ticker_symbol)
+        api_key = st.secrets["fmp_api_key"]
+        url = f"https://financialmodelingprep.com/api/v3/profile/{ticker_symbol}?apikey={api_key}"
+        response = requests.get(url)
+        
+        if response.status_code != SUCCESSFUL_REQUEST:
+            st.error("Invalid ticker symbol or no data available.")
+            st.stop()
+            
+        stock_info = response.json()
         try:
-            company_name = stock_info.info['shortName']
-        except KeyError:
+            company_name = stock_info[0]['companyName']
+        except (KeyError, IndexError):
             st.error("Invalid ticker symbol or no data available.")
             st.stop()
 
@@ -79,22 +88,46 @@ def main():
             ten_days_before_today = today_date - datetime.timedelta(days=10)
 
             # Fetch stock data
-            stock_data = yf.download(ticker_symbol, start=adjusted_start_date, end=end_date)
-            past_ten_days_stock_data = yf.download(ticker_symbol, start=ten_days_before_today, end=today_date)
-
-            # Check if data is available
-            if stock_data.empty or past_ten_days_stock_data.empty:
+            url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker_symbol}?from={adjusted_start_date}&to={end_date}&apikey={api_key}"
+            response = requests.get(url)
+            
+            if response.status_code != SUCCESSFUL_REQUEST:
                 st.error("No stock data available for the specified period.")
                 st.stop()
+                
+            stock_data = response.json()
+            if 'historical' not in stock_data or not stock_data['historical']:
+                st.error("No stock data available for the specified period.")
+                st.stop()
+                
+            historical_data = pd.DataFrame(stock_data['historical'])
+            historical_data['date'] = pd.to_datetime(historical_data['date'])
+            historical_data.set_index('date', inplace=True)
+            historical_data.sort_index(inplace=True)
+
+            # Fetch recent data for today's value
+            url_recent = f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker_symbol}?from={ten_days_before_today}&to={today_date}&apikey={api_key}"
+            response_recent = requests.get(url_recent)
+            
+            if response_recent.status_code != SUCCESSFUL_REQUEST:
+                st.error("Could not fetch recent stock data.")
+                st.stop()
+                
+            recent_data = response_recent.json()
+            if 'historical' not in recent_data or not recent_data['historical']:
+                st.error("No recent stock data available.")
+                st.stop()
+                
+            recent_historical_data = pd.DataFrame(recent_data['historical'])
 
             # Extract closing prices
-            closing_prices = stock_data['Close'].values.flatten().tolist()
-            past_ten_days_closing_prices = past_ten_days_stock_data['Close'].values.flatten().tolist()
+            closing_prices = historical_data['close'].values.flatten().tolist()
+            past_ten_days_closing_prices = recent_historical_data['close'].values.flatten().tolist()
 
             # Calculate financial metrics
             average_price = sum(closing_prices) / len(closing_prices)
             latest_closing_price = closing_prices[-1]
-            todays_closing_price = past_ten_days_closing_prices[-1]
+            todays_closing_price = past_ten_days_closing_prices[0]  # Most recent price
 
             num_investment_days = len(closing_prices)
             invested_amount = daily_investment_amount * num_investment_days
