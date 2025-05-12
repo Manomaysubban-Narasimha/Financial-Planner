@@ -8,7 +8,11 @@ import streamlit as st
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
-
+STRONG_BUY_SCORE = 5
+BUY_SCORE = 4
+HOLD_SCORE = 3
+SELL_SCORE = 2
+STRONG_SELL_SCORE = 1
 
 MAX_FREE_TIER_MAXIMIZE_FETCH = 100
 MILLION = 1_000_000
@@ -28,29 +32,13 @@ def load_finbert_model():
 tokenizer, model = load_finbert_model()
 
 def get_stock_news(stock_symbol):
-    API_KEY = st.secrets["news_api_key"] 
-    url = 'https://newsapi.org/v2/everything'
-    
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=15)
-    
-    financial_domains = 'bloomberg.com,cnbc.com,reuters.com,wsj.com,finance.yahoo.com,fool.com,nasdaq.com,benzinga.com'
-    
-    params = {
-        'q': stock_symbol + ' stock',
-        'from': start_date.strftime('%Y-%m-%d'),
-        'to': end_date.strftime('%Y-%m-%d'),
-        'sortBy': 'relevancy',
-        'apiKey': API_KEY,
-        'language': 'en',
-        'domains': financial_domains,
-        'pageSize': MAX_FREE_TIER_MAXIMIZE_FETCH  
-    }
+    fmp_api_key = st.secrets["fmp_api_key"]
+    url = f'https://financialmodelingprep.com/api/v3/stock_news?tickers={stock_symbol}&apikey={fmp_api_key}'
     
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url)
         response.raise_for_status()
-        return response.json()['articles']
+        return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching news: {e}")
         return None
@@ -84,12 +72,12 @@ def analyze_stock_sentiment(stock_symbol):
     
     for article in articles:
         title = article.get('title', '')
-        description = article.get('description', '')
+        text = article.get('text', '')
         url = article.get('url', '')
         
-        text = f"{title} {description}"
-        if text.strip():
-            sentiment_score = analyze_sentiment(text)
+        content = f"{title} {text}"
+        if content.strip():
+            sentiment_score = analyze_sentiment(content)
             sentiments.append(sentiment_score)
             article_details.append({
                 'title': title,
@@ -300,6 +288,23 @@ def format_value(value):
         return f'{value:.2f}'
 
 
+def get_average_analyst_rating(stock_symbol):
+    api_key = st.secrets["fmp_api_key"]
+    url = f"https://financialmodelingprep.com/api/v3/analyst-stock-recommendations/{stock_symbol}?apikey={api_key}"
+    response = requests.get(url)
+    response = response.json()
+    analysts_ratings = response[0]
+    total_score = 0
+    total_score = total_score + STRONG_BUY_SCORE * analysts_ratings['analystRatingsStrongBuy']
+    total_score = total_score + BUY_SCORE * analysts_ratings['analystRatingsbuy']
+    total_score = total_score + HOLD_SCORE * analysts_ratings['analystRatingsHold']
+    total_score = total_score + SELL_SCORE * analysts_ratings['analystRatingsSell']
+    total_score = total_score + STRONG_SELL_SCORE * analysts_ratings['analystRatingsStrongSell']
+    total_analysts = analysts_ratings['analystRatingsStrongBuy'] + analysts_ratings['analystRatingsbuy'] + analysts_ratings['analystRatingsHold'] + analysts_ratings['analystRatingsSell'] + analysts_ratings['analystRatingsStrongSell']
+    average_analyst_rating = total_score / total_analysts
+    return average_analyst_rating
+
+
 def get_average_recommendation_rating(stock_symbol):
     fmp_api_key = st.secrets["fmp_api_key"]
     url = f"https://financialmodelingprep.com/api/v3/rating/{stock_symbol}?apikey={fmp_api_key}"
@@ -314,6 +319,7 @@ def get_average_recommendation_rating(stock_symbol):
         all_rating_scores.append(data[0]["ratingDetailsDEScore"])  # Debt to Equity 
         all_rating_scores.append(data[0]["ratingDetailsPEScore"])  # Price to Earnings
         all_rating_scores.append(data[0]["ratingDetailsPBScore"])  # Price to Book
+        all_rating_scores.append(get_average_analyst_rating(stock_symbol))
         
         return round(mean(all_rating_scores), 2)
     else:
