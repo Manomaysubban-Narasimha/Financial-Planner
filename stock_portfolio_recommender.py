@@ -3,7 +3,6 @@ import json
 import certifi
 import tqdm
 import streamlit as st 
-import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from urllib.request import urlopen
@@ -34,59 +33,67 @@ def render_ETF(etf):
         ["Line", "Candlestick"]
     )
     
-    etf_data = yf.Ticker(etf)
-    
     end_date = datetime.now()
     if timeframes == "1D":
         start_date = end_date - timedelta(days=1)
-        interval = "1m"
+        interval = "1min"
     elif timeframes == "1W":
         start_date = end_date - timedelta(weeks=1)
-        interval = "1h"
+        interval = "1hour" 
     elif timeframes == "1M":
         start_date = end_date - timedelta(days=30)
-        interval = "1d"
+        interval = "1day"
     elif timeframes == "6M":
         start_date = end_date - timedelta(days=180)
-        interval = "1d"
+        interval = "1day"
     elif timeframes == "YTD":
         start_date = datetime(end_date.year, 1, 1)
-        interval = "1d"
+        interval = "1day"
     elif timeframes == "1Y":
         start_date = end_date - timedelta(days=365)
-        interval = "1d"
+        interval = "1day"
     elif timeframes == "5Y":
         start_date = end_date - timedelta(days=1825)
-        interval = "1d"
+        interval = "1day"
     else:  # MAX
         start_date = None
-        interval = "1d"
+        interval = "1day"
+
+    api_key = st.secrets["fmp_api_key"]
     
-    historical_data = etf_data.history(start=start_date, end=end_date, interval=interval)
-    
-    # st.dataframe(historical_data)
-    
-    
-    if chart_type == "Line":
-        st.line_chart(historical_data['Close'])
-    else:  # Candlestick
-        fig = go.Figure(data=[go.Candlestick(x=historical_data.index,
-            open=historical_data['Open'],
-            high=historical_data['High'],
-            low=historical_data['Low'],
-            close=historical_data['Close'])])
+    if start_date:
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/{interval}/{etf}?from={start_date.strftime('%Y-%m-%d')}&to={end_date.strftime('%Y-%m-%d')}&apikey={api_key}"
+    else:
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/{interval}/{etf}?apikey={api_key}"
         
-        # to avoid displaying weekends and non-market days
-        fig.update_layout(
-            xaxis={
-                'type': 'category',
-                'title': 'Date'
-            },
-            yaxis={'title': 'Price'},
-            xaxis_rangeslider_visible=False
-        )
+    response = requests.get(url)
+    if response.status_code == SUCCESSFUL_REQUEST:
+        data = response.json()
+        historical_data = pd.DataFrame(data)
+        historical_data['date'] = pd.to_datetime(historical_data['date'])
+        historical_data.set_index('date', inplace=True)
+        historical_data.sort_index(inplace=True)
         
-        st.plotly_chart(fig)
+        if chart_type == "Line":
+            st.line_chart(historical_data['close'])
+        else:  # Candlestick
+            fig = go.Figure(data=[go.Candlestick(x=historical_data.index,
+                open=historical_data['open'],
+                high=historical_data['high'],
+                low=historical_data['low'],
+                close=historical_data['close'])])
+            
+            # to avoid displaying weekends and non-market days
+            fig.update_layout(
+                xaxis={
+                    'type': 'category',
+                    'title': 'Date'
+                },
+                yaxis={'title': 'Price'},
+                xaxis_rangeslider_visible=False
+            )
+            
+            st.plotly_chart(fig)
 
 
 def get_constituents(min_market_cap, max_market_cap):
@@ -145,21 +152,6 @@ def is_stock(symbol):
     except Exception as e:
         print(f"Error checking if {symbol} is a stock: {e}")
         return False
-
-
-def recommend_mega_cap():
-    all_mega_caps = get_constituents(MEGA_CAP_MIN, MEGA_CAP_MAX)
-    print(f"\n\n\nAll megacaps = {all_mega_caps}\n\n\n")
-    mega_cap_rating = dict()
-    for mega_cap in all_mega_caps:
-        if is_stock(mega_cap):
-            mega_cap_rating[mega_cap] = get_average_recommendation_rating(mega_cap)
-    # Sort mega cap stocks by rating in descending order
-    sorted_mega_caps = dict(sorted(mega_cap_rating.items(), key=lambda x: x[1], reverse=True))
-    
-    st.write("### Mega Cap Ratings (Sorted)")
-    for symbol, rating in sorted_mega_caps.items():
-        st.write(f"{symbol}: {rating}")
 
 
 def main():
