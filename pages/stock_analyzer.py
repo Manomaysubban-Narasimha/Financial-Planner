@@ -209,19 +209,26 @@ def get_company_financials(symbol):
     # Get income statement
     income_url = f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?limit=1&apikey={fmp_api_key}"
     income_response = requests.get(income_url)
+
+    # Get key metrics
+    metrics_url = f"https://financialmodelingprep.com/api/v3/key-metrics/{symbol}?period=annual&apikey={fmp_api_key}"
+    metrics_response = requests.get(metrics_url)
     
-    if profile_response.status_code != SUCCESSFUL_REQUEST or income_response.status_code != SUCCESSFUL_REQUEST:
+    if profile_response.status_code != SUCCESSFUL_REQUEST or income_response.status_code != SUCCESSFUL_REQUEST or metrics_response.status_code != SUCCESSFUL_REQUEST:
         st.error("Failed to fetch company data")
         return
     
     profile_data = profile_response.json()[0]
     income_data = income_response.json()[0]
+    metrics_data = metrics_response.json()[0]
     
     # Extract relevant financial data
     revenue = income_data.get('revenue', 'N/A')
     net_profit = income_data.get('netIncome', 'N/A')
     market_cap = profile_data.get('mktCap', 'N/A')
-    pe_ratio = profile_data.get('pe', 'N/A')
+    pe_ratio = metrics_data.get('peRatio', 'N/A')
+    rd_to_revenue = metrics_data.get('researchAndDdevelopementToRevenue', 'N/A')
+    fcf_yield = metrics_data.get('freeCashFlowYield', 'N/A')
     
     revenue = format_value(revenue)
     net_profit = format_value(net_profit)
@@ -245,13 +252,14 @@ def get_company_financials(symbol):
     - **Net Profit/Bottom Line (Trailing 12 months):** ${net_profit}
     - **Market Cap:** ${market_cap}
     - **PE Ratio:** {f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else 'N/A'}
+    - **R&D to Revenue:** {f"{rd_to_revenue:.2%}" if isinstance(rd_to_revenue, (int, float)) else 'N/A'}
+    - **Free Cash Flow Yield:** {f"{fcf_yield:.2%}" if isinstance(fcf_yield, (int, float)) else 'N/A'}
     - **Intrinsic Value (DCF):** ${intrinsic_value:.2f}
     - **Current price:** ${current_price:.2f}
     - **Valuation:** {valuation}
     """
     
     return financials
-
 
 def is_in_millions(value):
     return MILLION <= value < BILLION
@@ -339,7 +347,7 @@ def display_recommendation(stock_symbol):
     ratings = {
         1: "Strong Sell",
         2: "Sell",
-        3: "Neutral",
+        3: "Hold",
         4: "Buy",
         5: "Strong Buy"
     }

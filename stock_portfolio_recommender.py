@@ -180,15 +180,41 @@ def is_stock(symbol):
 
 def main():
     st.title("Stock Recommender")
-    risk_level = st.slider(
-        "Select Your Risk Tolerance",
-        min_value=1,
-        max_value=3,
-        value=1,
-        help="1 = Low, 2 = Medium, 3 = High"
+
+    score_map = {
+        "1-3 years": 1,
+        "3-7 years": 2,
+        "7+ years": 3,
+        "Up to 10% CAGR": 1,
+        "10-14% CAGR": 2,
+        "Greater than 14% CAGR": 3,
+        "Low": 1,
+        "Medium": 2,
+        "High": 3,
+
+    }
+
+    investment_horizon = st.radio(
+        "What is your investment time horizon?",
+        ["1-3 years", "3-7 years", "7+ years"],
+        help="How long do you plan to keep your money invested?"
     )
+
+    desired_roi = st.radio(
+        "What is your desired annual return on investment?",
+        ["Up to 10% CAGR", "10-14% CAGR", "Greater than 14% CAGR"],
+        help="What annual percentage return are you aiming to achieve with your investments?"
+    )
+    risk_tolerance = st.select_slider(
+        "Select Your Risk Tolerance",
+        options=["Low", "Medium", "High"],
+        value="Low",
+        help="Choose your preferred level of investment risk tolerance"
+    )
+
+    score = round((score_map[investment_horizon] + score_map[desired_roi] + score_map[risk_tolerance]) / 3)
     
-    match risk_level:
+    match score:
         case 1:
             render_ETF("VOO")
         case 2:
