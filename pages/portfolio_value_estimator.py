@@ -81,7 +81,8 @@ def main():
             # Adjust start_date to the previous market day if necessary
             adjusted_start_date = get_previous_market_day(start_date)
             if adjusted_start_date != start_date:
-                st.write(f"Note: Start date adjusted to the previous market day: {adjusted_start_date}")
+                # st.write(f"Note: Start date adjusted to the previous market day: {adjusted_start_date}")
+                pass
 
             # Define today's date and ten days prior
             today_date = datetime.date.today()
