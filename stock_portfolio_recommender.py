@@ -221,6 +221,15 @@ def main():
             render_ETF("QQQM")
         case 3:
             recommend_from_nasdaq100()
+    
+    st.markdown("---")
+    st.markdown("""
+    **Disclaimer:** This tool provides general investment recommendations based on user inputs and publicly available data. 
+    The recommendations should not be considered as financial advice. Investment decisions should be made after conducting 
+    thorough research and consulting with qualified financial advisors. Past performance does not guarantee future results. 
+    Market investments carry risk, and you may lose some or all of your invested capital.
+    The creators of this tool are not responsible for any losses incurred from following these recommendations.
+    """)
 
 
 if __name__ == "__main__":

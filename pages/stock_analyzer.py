@@ -402,6 +402,15 @@ def main():
     else:
         st.warning("Please enter a stock symbol.")
 
+    st.markdown("---")
+    st.markdown("""
+    **Disclaimer:** This tool provides general stock analysis and recommendations based on publicly available data and 
+    automated analysis techniques. The information presented should not be considered as financial advice. All investment 
+    decisions should be made after conducting thorough research and consulting with qualified financial advisors. 
+    Past performance does not guarantee future results. Market investments carry risk, and you may lose some or all of 
+    your invested capital. The creators and operators of this tool are not responsible for any losses incurred from 
+    following these analyses or recommendations.
+    """)
 
 if __name__ == "__main__":
     main()

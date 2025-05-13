@@ -69,7 +69,16 @@ def main():
     retirement_calculator.calculate()
     if st.button("Calculate"):
         retirement_calculator.display_results()
-
+        
+    st.markdown("---")
+    st.markdown("""
+    **Disclaimer:** This retirement calculator provides general estimates based on historical data and assumptions. 
+    The calculations and results should not be considered as financial advice. All retirement planning decisions 
+    should be made after conducting thorough research and consulting with qualified financial advisors. The estimates 
+    provided do not guarantee future results and do not account for all possible factors that could affect your retirement 
+    savings. Market investments carry risk, and you may lose some or all of your invested capital. The creators and 
+    operators of this tool are not responsible for any financial losses or decisions made based on these calculations.
+    """)
 
 if __name__ == "__main__":
     main()
