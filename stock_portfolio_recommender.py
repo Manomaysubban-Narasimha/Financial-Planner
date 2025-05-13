@@ -137,6 +137,7 @@ def recommend_from_nasdaq100():
         reverse=True))[:10])
     
     st.write("### Top 10 Recommendations")
+    st.write("For optimal diversification, consider investing equally in each of these recommended stocks.")
     
     # Create a DataFrame for better display
     recommendations_data = []
@@ -144,7 +145,7 @@ def recommend_from_nasdaq100():
         recommendations_data.append({
             "Symbol": symbol,
             "Company Name": symbol_to_name[symbol],
-            "Rating": round(rating, 5),
+            # "Rating": round(rating, 5),
             # "Net Income": f"${net_incomes[symbol]:,.2f}"
         })
     
